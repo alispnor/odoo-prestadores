@@ -1,0 +1,60 @@
+<odoo>
+    <record id="view_prestador_tree" model="ir.ui.view">
+        <field name="name">prestador.servico.tree</field>
+        <field name="model">prestador.servico</field>
+        <field name="arch" type="xml">
+            <tree string="Prestadores de Serviço">
+                <field name="name"/>
+                <field name="cpf_cnpj"/>
+                <field name="celular"/>
+                <field name="email"/>
+                <field name="categoria"/>
+                <field name="cidade"/>
+                <field name="uf"/>
+                <field name="ativo"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_prestador_form" model="ir.ui.view">
+        <field name="name">prestador.servico.form</field>
+        <field name="model">prestador.servico</field>
+        <field name="arch" type="xml">
+            <form string="Prestador de Serviço">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="cpf_cnpj"/>
+                        <field name="celular"/>
+                        <field name="email"/>
+                        <field name="categoria"/>
+                        <field name="ativo"/>
+                    </group>
+                    <group string="Endereço">
+                        <field name="cep"/>
+                        <field name="logradouro"/>
+                        <field name="numero"/>
+                        <field name="complemento"/>
+                        <field name="bairro"/>
+                        <field name="cidade"/>
+                        <field name="uf"/>
+                        <field name="latitude"/>
+                        <field name="longitude"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_toggle_status" string="Bloquear/Desbloquear" type="object" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_prestador" model="ir.actions.act_window">
+        <field name="name">Prestadores</field>
+        <field name="res_model">prestador.servico</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_prestador_root" name="Prestadores"/>
+    <menuitem id="menu_prestador" name="Gerenciar Prestadores" parent="menu_prestador_root" action="action_prestador"/>
+</odoo>

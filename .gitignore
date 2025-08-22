@@ -1,0 +1,49 @@
+.env# =========================
+# Odoo / Python
+# =========================
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.egg-info/
+.eggs/
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# =========================
+# Logs
+# =========================
+*.log
+*.log.*
+logs/
+odoo.log
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# =========================
+# Docker / Volumes
+# =========================
+postgres/*
+!postgres/.gitignore
+
+odoo/filestore/
+odoo/sessions/
+odoo/.local/
+odoo/.cache/
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.tmp
+*.orig
