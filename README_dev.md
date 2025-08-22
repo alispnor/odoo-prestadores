@@ -230,5 +230,5 @@ irgs-9gxr-ewdu
 
 http://localhost:8069/web?debug=1#action=38&model=ir.module.module&view_type=kanban&cids=1&menu_id=15
 
-
+ atualizar 
 docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico
