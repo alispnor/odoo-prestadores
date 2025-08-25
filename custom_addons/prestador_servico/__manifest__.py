@@ -1,6 +1,6 @@
 {
     "name": "Prestadores de Serviço",
-    "version": "1.0",
+    "version": "17.0.0.1.0",
     "summary": "Módulo de gerenciamento de prestadores de serviço",
     "author": "Ali Mohammed Saleh Al Salahi",
     "website": "https://github.com/Alispnor",

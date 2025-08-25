@@ -1,5 +1,4 @@
 from odoo import models, fields, api
-import requests
 
 class PrestadorServico(models.Model):
     _name = "prestador.servico"
@@ -33,51 +32,45 @@ class PrestadorServico(models.Model):
 
 
 
-
-    @api.onchange('cep', 'logradouro', 'numero', 'cidade', 'uf')
+    @api.onchange('cep', 'logradouro', 'numero', 'cidade', 'uf', 'bairro')
     def _onchange_endereco(self):
-        print("\n=== Método onchange_endereco sendo executado ===")
-        """
-        Faz a requisição para a API Nominatim para obter latitude e longitude.
-        """
+        import logging, requests
+        _logger = logging.getLogger(__name__)
         BASE_URL = "https://nominatim.openstreetmap.org/search"
-        
-        endereco_completo = f"{self.logradouro}, {self.numero}, {self.bairro}, {self.cidade}, {self.uf}, {self.cep}"
-        print(f"Endereço a ser pesquisado: {endereco_completo}")
-        
-        if self.logradouro and self.numero and self.cidade and self.uf:
-            try:
-                params = {
-                    'q': endereco_completo,
-                    'format': 'json',
-                    'limit': 1,
-                }
-                
-                # É uma boa prática definir um User-Agent para a API
-                headers = {
-                    'User-Agent': 'OdooPrestadorServicoModule' 
-                }
-                
-                response = requests.get(BASE_URL, params=params, headers=headers)
-                response.raise_for_status()
-                
-                data = response.json()
-                print(f"Resposta da API Nominatim: {data}")
-                
-                if data:
-                    result = data[0]
-                    self.latitude = float(result.get('lat'))
-                    self.longitude = float(result.get('lon'))
-                    print(f"Latitude e Longitude encontradas: {self.latitude}, {self.longitude}")
+        UA = "OdooPrestadorServico/1.0 (contato: alispnor@gmail.com)"  # ajuste
 
-                else:
-                    print("API retornou uma lista vazia. Endereço não encontrado.")
-                    self.latitude = 0.0
-                    self.longitude = 0.0
-            except requests.exceptions.RequestException as e:
-                print(f"Erro na requisição da API: {e}")
-                self.latitude = 0.0
-                self.longitude = 0.0
-        else:
-            print("AVISO: Campos de endereço incompletos, onchange não fará a requisição.")
+        for rec in self:
+            cep = (rec.cep or "").replace("-", "").replace(".", "").strip()
+            logradouro = (rec.logradouro or "").strip()
+            numero = (rec.numero or "").strip()
+            bairro = (rec.bairro or "").strip()
+            cidade = (rec.cidade or "").strip()
+            uf = (rec.uf or "").strip().upper()
 
+            # Só tenta quando endereço está completo o suficiente
+            if logradouro and numero and cidade and uf:
+                endereco = ", ".join(filter(None, [f"{logradouro}", f"{numero}", bairro, cidade, uf, cep]))
+                params = {"q": endereco, "format": "json", "limit": 1}
+                headers = {"User-Agent": UA}
+                try:
+                    resp = requests.get(BASE_URL, params=params, headers=headers, timeout=5)
+                    resp.raise_for_status()
+                    data = resp.json() or []
+                    if data:
+                        rec.latitude = float(data.get("lat") or 0.0)
+                        rec.longitude = float(data.get("lon") or 0.0)
+                        _logger.debug("Geocode OK: %s => (%s, %s)", endereco, rec.latitude, rec.longitude)
+                    else:
+                        _logger.info("Geocode vazio para: %s", endereco)
+                        # opcional: não zerar em falha; comente as linhas abaixo se quiser manter valores anteriores
+                        # rec.latitude = 0.0
+                        # rec.longitude = 0.0
+                except requests.RequestException as e:
+                    _logger.warning("Erro Nominatim (%s): %s", endereco, e)
+                    # opcional: não zerar em falha temporária
+                    # rec.latitude = 0.0
+                    # rec.longitude = 0.0
+            else:
+                # Endereço incompleto: defina comportamento (zerar ou manter)
+                rec.latitude = 0.0
+                rec.longitude = 0.0

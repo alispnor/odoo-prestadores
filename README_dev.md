@@ -232,3 +232,42 @@ http://localhost:8069/web?debug=1#action=38&model=ir.module.module&view_type=kan
 
  atualizar 
 docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico
+
+
+docker exec -it odoo-db id -u postgres
+docker exec -it odoo-db id -g postgres
+
+docker exec -it odoo-17 id -u odoo
+docker exec -it odoo-17 id -g odoo
+101
+
+
+sudo chown -R 999:999 ./postgres/data
+
+
+
+custom_addons/prestador_servico/static/description/icon.png
+
+docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico --stop-after-init
+docker exec -u root -it odoo-17 chown -R odoo:odoo /mnt/extra-addons
+
+
+# descubra seu UID real (normalmente 1000)
+id -u
+
+# aplique para todo o diretório que é montado
+sudo chown -R 1000:101 ~/Projetos/odoo-prestadores/extra-addons
+
+docker restart odoo-17
+docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico --stop-after-init
+docker compose up -d --force-recreate
+
+
+
+custom_addons/prestador_servico/views/prestador_views.xml
+ls -l custom_addons | grep prestador_servico
+
+
+docker restart odoo-17
+docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico --stop-after-init
+
