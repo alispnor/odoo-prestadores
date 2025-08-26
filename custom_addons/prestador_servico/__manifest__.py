@@ -6,7 +6,7 @@
     "website": "https://github.com/Alispnor",
     "category": "Custom",
     "license": "LGPL-3",
-    "depends": ["base"],
+    "depends": ["base",'mail'],
     "data": [
         "security/ir.model.access.csv",
         "views/prestador_views.xml",

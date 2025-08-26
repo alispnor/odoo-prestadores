@@ -1,1 +1,1 @@
-from . import prestador
+from . import prestador_servico,geocode_service

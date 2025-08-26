@@ -271,3 +271,43 @@ ls -l custom_addons | grep prestador_servico
 docker restart odoo-17
 docker exec -it odoo-17 odoo -c /etc/odoo/odoo.conf -d prestador_db -u prestador_servico --stop-after-init
 
+
+# Conectar ao container do PostgreSQL
+docker exec -it odoo-db psql -U odoo
+
+# Dropar o banco existente
+DROP DATABASE prestador_db;
+\q
+
+
+# 1. Status dos containers
+docker ps -a
+
+# 2. Logs do Odoo (substitua pelo nome real do container)
+docker logs odoo-17
+
+# 3. Logs do PostgreSQL  
+docker logs odoo-db
+
+# 4. Teste conectividade interna
+docker exec -it odoo-17 ping db
+
+# 5. Verificar se a porta está bound
+docker port odoo-17
+docker port odoo-db
+
+
+# 1. Verificar status dos containers
+docker ps -a
+
+# 2. Verificar se o container está tentando iniciar mas falhando silenciosamente
+docker inspect odoo-17 | grep -A 5 -B 5 "Status\|RestartCount"
+
+# 3. Tentar iniciar com logs em tempo real
+docker restart odoo-17 && docker logs -f odoo-17
+
+admin macbook
+
+yiez-qcgd-yt4u
+
+

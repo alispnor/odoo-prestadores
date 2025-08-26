@@ -5,23 +5,49 @@
         <field name="name">prestador.servico.tree</field>
         <field name="model">prestador.servico</field>
         <field name="arch" type="xml">
-            <tree string="Prestadores de Serviço" default_order="name">
+            <tree string="Prestadores de Serviço" 
+                  default_order="name"
+                  decoration-success="geocode_status == 'success'"
+                  decoration-warning="geocode_status == 'pending'"
+                  decoration-danger="geocode_status == 'failed'"
+                  decoration-muted="geocode_status == 'incomplete'">
                 <field name="name"/>
                 <field name="categoria"/>
                 <field name="celular"/>
                 <field name="email"/>
                 <field name="cidade"/>
                 <field name="uf"/>
+                <!-- Campos invisíveis para carregar os dados -->
+                <field name="geocode_status" column_invisible="1"/>
+                <field name="latitude" column_invisible="1"/>
+                <field name="longitude" column_invisible="1"/>
+                <!-- Campo visual para mostrar se tem coordenadas -->
+                <field name="geocode_status" string="Localização" 
+                       widget="badge" 
+                       decoration-success="geocode_status == 'success'"
+                       decoration-warning="geocode_status == 'pending'"
+                       decoration-danger="geocode_status == 'failed'"/>
                 <field name="ativo" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
 
-   <record id="view_prestador_form" model="ir.ui.view">
+    <record id="view_prestador_form" model="ir.ui.view">
         <field name="name">prestador.servico.form</field>
         <field name="model">prestador.servico</field>
         <field name="arch" type="xml">
             <form string="Prestador de Serviço">
+                <header>
+                    <!-- Botão para forçar nova geocodificação -->
+                    <button name="action_force_geocode" 
+                            type="object" 
+                            string="🗺️ Atualizar Localização" 
+                            class="btn-secondary"
+                            help="Força uma nova busca de coordenadas"/>
+                    <!-- Status badge no header -->
+                    <field name="geocode_status" widget="statusbar" 
+                           statusbar_visible="pending,success,failed,incomplete"/>
+                </header>
                 <sheet>
                     <group>
                         <group string="Dados Pessoais">
@@ -32,13 +58,13 @@
                         </group>
                         <group string="Contato">
                             <field name="celular"/>
-                            <field name="email"/>
+                            <field name="email" widget="email"/>
                         </group>
                     </group>
 
                     <group string="Endereço">
                         <group>
-                            <field name="cep"/>
+                            <field name="cep" placeholder="00000-000"/>
                             <field name="logradouro"/>
                             <field name="numero"/>
                             <field name="complemento"/>
@@ -46,38 +72,165 @@
                         <group>
                             <field name="bairro"/>
                             <field name="cidade"/>
-                            <field name="uf"/>
+                            <field name="uf" widget="selection"/>
                         </group>
                     </group>
                     
-                    <group string="Localização (Latitude e Longitude)">
-                        <field name="latitude"/>
-                        <field name="longitude"/>
+                    <!-- Seção de localização mais rica -->
+                    <group string="🌐 Localização Geográfica">
+                        <group>
+                            <field name="latitude" 
+                                   readonly="1"
+                                   decoration-success="latitude != 0"
+                                   widget="float" 
+                                   digits="[10,6]"/>
+                            <field name="longitude" 
+                                   readonly="1"
+                                   decoration-success="longitude != 0"
+                                   widget="float" 
+                                   digits="[10,6]"/>
+                        </group>
+                        <group>
+                            <field name="geocode_status" 
+                                   readonly="1"
+                                   widget="badge"
+                                   decoration-success="geocode_status == 'success'"
+                                   decoration-warning="geocode_status == 'pending'"
+                                   decoration-danger="geocode_status == 'failed'"/>
+                            <field name="last_geocode_attempt" 
+                                   readonly="1"
+                                   widget="datetime"/>
+                        </group>
                     </group>
 
+                    <!-- Seção para mostrar coordenadas com estilo melhorado -->
+                    <group string="📍 Localização" 
+                        invisible="latitude == 0" 
+                        colspan="2">
+                        <div class="o_field_widget" style="width: 100%; margin-bottom: 10px;">
+                            <div  style="margin: 0; padding: 15px; border-radius: 8px; width: 100%; box-sizing: border-box;">
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: nowrap;">
+                                        <strong style="color: #31708f; font-size: 14px; white-space: nowrap;">Coordenadas Geográficas:</strong>
+                                        <span style="font-family: monospace; font-size: 13px; white-space: nowrap;">
+                                            Lat: <field name="latitude" readonly="1" nolabel="1" class="oe_inline" style="font-weight: bold; color: #2c3e50;"/>
+                                        </span>
+                                        <span style="font-family: monospace; font-size: 13px; white-space: nowrap;">
+                                            Lng: <field name="longitude" readonly="1" nolabel="1" class="oe_inline" style="font-weight: bold; color: #2c3e50;"/>
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <i class="fa fa-lightbulb-o" style="color: #31708f;"></i>
+                                        <em style="color: #31708f; font-size: 12px; white-space: nowrap;">
+                                            Copie as coordenadas e cole no Google Maps ou outro serviço de mapas
+                                        </em>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </group>
+
+
                 </sheet>
+                
+                <!-- Chatter para histórico -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
 
+    <!-- Search View para filtros -->
+    <record id="view_prestador_search" model="ir.ui.view">
+        <field name="name">prestador.servico.search</field>
+        <field name="model">prestador.servico</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Prestadores">
+                <field name="name" string="Nome/CPF/CNPJ" 
+                       filter_domain="['|', ('name','ilike',self), ('cpf_cnpj','ilike',self)]"/>
+                <field name="categoria"/>
+                <field name="cidade"/>
+                <field name="uf"/>
+                <field name="celular"/>
+                <field name="email"/>
+                
+                <!-- Filtros pré-definidos -->
+                <filter string="Ativos" name="ativo" domain="[('ativo','=',True)]"/>
+                <filter string="Inativos" name="inativo" domain="[('ativo','=',False)]"/>
+                
+                <separator/>
+                <filter string="Com Localização" name="com_localizacao" 
+                        domain="[('geocode_status','=','success')]"/>
+                <filter string="Sem Localização" name="sem_localizacao" 
+                        domain="['|', ('geocode_status','!=','success'), ('latitude','=',0)]"/>
+                <filter string="Geocodificação Pendente" name="geocode_pendente" 
+                        domain="[('geocode_status','=','pending')]"/>
+                <filter string="Erro na Geocodificação" name="geocode_erro" 
+                        domain="[('geocode_status','=','failed')]"/>
+                
+                <!-- Agrupamentos -->
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Categoria" name="group_categoria" context="{'group_by':'categoria'}"/>
+                    <filter string="Estado" name="group_uf" context="{'group_by':'uf'}"/>
+                    <filter string="Cidade" name="group_cidade" context="{'group_by':'cidade'}"/>
+                    <filter string="Status Localização" name="group_geocode" context="{'group_by':'geocode_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action principal -->
     <record id="action_prestador" model="ir.actions.act_window">
         <field name="name">Prestadores de Serviço</field>
         <field name="res_model">prestador.servico</field>
         <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_prestador_search"/>
+        <field name="context">{}</field>
+        <field name="target">current</field> 
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Crie um novo prestador de serviço para começar a gerenciar sua rede.
             </p>
+            <p>
+                O sistema irá automaticamente buscar as coordenadas geográficas
+                baseadas no endereço informado.
+            </p>
         </field>
     </record>
 
+    <!-- Action para prestadores sem localização -->
+    <record id="action_prestador_sem_localizacao" model="ir.actions.act_window">
+        <field name="name">Prestadores Sem Localização</field>
+        <field name="res_model">prestador.servico</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('geocode_status', '!=', 'success')]</field>
+        <field name="context">{'search_default_sem_localizacao': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Todos os prestadores já possuem localização!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menus -->
     <menuitem id="menu_prestador_root"
               name="Prestadores de Serviço"
               sequence="10"
-              web_icon="prestador_servico_module,static/description/icon.png"/>
+              web_icon="prestador_servico,static/description/icon.png"/>
+              
     <menuitem id="menu_prestador_management"
-              name="Gerenciar Prestadores"
+              name="Todos os Prestadores"
               parent="menu_prestador_root"
-              action="action_prestador"/>
+              action="action_prestador"
+              sequence="10"/>
+              
+    <menuitem id="menu_prestador_sem_localizacao"
+              name="Sem Localização"
+              parent="menu_prestador_root"
+              action="action_prestador_sem_localizacao"
+              sequence="20"/>
 
 </odoo>
