@@ -9,7 +9,9 @@ __pycache__/
 .eggs/
 .Python
 env/
+README_Help.md
 venv/
+postgres/data
 ENV/
 .venv/
 
