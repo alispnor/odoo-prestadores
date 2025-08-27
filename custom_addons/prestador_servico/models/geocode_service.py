@@ -53,7 +53,7 @@ class GeocodeService(models.TransientModel):
         """Geocodifica usando OpenStreetMap Nominatim"""
         url = "https://nominatim.openstreetmap.org/search"
         headers = {
-            'User-Agent': 'OdooPrestadorServico/1.0 (contato@empresa.com.br)'
+            'User-Agent': 'OdooPrestadorServico/1.0 (alispnor@gmail.com)'
         }
         params = {
             'q': address,
